@@ -1,10 +1,14 @@
 name: Cat Facts API Query
-
-# Run every 5 minutes
 on:
-  schedule:
-    - cron: '* * * * *'
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:  # Enables manual triggering
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: false
+        default: 'warning'
+      tags:
+        description: 'Optional tags'
+        required: false 
 
 jobs:
   fetch-cat-facts:
