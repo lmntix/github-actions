@@ -1,0 +1,56 @@
+name: Cat Facts API Query
+
+# Run every 5 minutes
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  fetch-cat-facts:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+    
+    - name: Query Cat Facts API
+      run: |
+        python -m pip install requests
+        python << EOF
+        import requests
+        import json
+        from datetime import datetime
+
+        # Query the Cat Facts API
+        response = requests.get('https://cat-fact.herokuapp.com/facts')
+        
+        if response.status_code == 200:
+            facts = response.json()
+            
+            # Log the facts
+            print(f"Fetched {len(facts)} cat facts at {datetime.now()}")
+            
+            # Optional: Save facts to a file
+            with open('cat_facts.json', 'w') as f:
+                json.dump(facts, f, indent=2)
+            
+            # Print first few facts
+            for fact in facts[:3]:
+                print(f"Fact: {fact.get('text', 'No text available')}")
+        else:
+            print(f"Failed to fetch facts. Status code: {response.status_code}")
+        EOF
+    
+    - name: Commit facts if changed
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add cat_facts.json
+        git commit -m "Update cat facts" || echo "No changes to commit"
+        git push
